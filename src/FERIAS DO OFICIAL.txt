@@ -1,0 +1,5 @@
+- Controle de férias do Oficial do Cartório, deve ser digitalizado para posteriormente ser enviado pelo setor de TI.
+
+Número do documento: 
+
+Nesse caso das férias por exemplo ter o período de 28 de fevereiro até 9 de março, dar o seguinte número para o documento: "28-2 A 9-3"

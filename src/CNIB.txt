@@ -1,0 +1,5 @@
+- O CNIB, é um relatório de indisponibilidade que vem conferido do setor "Pessoal" com anotações sobre as buscas, efetuadas nas inclusões e cancelamentos de indisponibilidade de pessoas ou imóveis.
+- Normalmente são gerados 2 documentos no mesmo dia, um pela manhã e outro na parte da tarde. 
+- Os dois documentos (manhã e tarde) devem ser digitalizados em um único arquivo, para serem salvos por data em caso de necessidade de consulta futura.
+
+Caso ainda tenha dúvida, entrar em contato com o setor de TI.
