@@ -1,0 +1,4 @@
+- É o mapa de ofícios de confirmação de lavratura, enviado pelo cartório por meio do Malote digital. Esse mapa contém todos os ofícios enviados no dia, caso seja feito mais de um ofício, o segundo ficará com um "A" ao final do arquivo.
+- Digitalizar o mapa, ele será salvo na mesma pasta do dia que foram feitos os respectivos malotes.
+
+Caso ainda tenha dúvida, entrar em contato com o setor de TI.

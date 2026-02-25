@@ -1,0 +1,6 @@
+- É um ofício que foi enviado pelo cartório por Malote digital para confirmação de lavraturas.
+- Digitalizar tanto o ofício quanto o seu comprovante de envio, devem ficar no mesmo arquivo PDF, ou seja, um documento único.
+
+Nome do documento, por exemplo, o ofício 087/2025-DIST terá o nome de documento como: "087"
+
+Caso ainda tenha dúvida, entrar em contato com o setor de TI.

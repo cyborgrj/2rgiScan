@@ -1,0 +1,6 @@
+Comando para gerar o arquivo py a partir do arquivo ui criado no QtDesigner
+Segue:
+
+pyside6-uic c:\2rgiScan\gui\main.ui -o c:\2rgiScan\gui\ui_main.py
+pyside6-uic c:\2rgiScan\gui\LoginUI.ui -o c:\2rgiScan\gui\ui_LoginUI.py
+

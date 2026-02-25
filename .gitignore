@@ -1,0 +1,29 @@
+# Configurações locais
+config.ini
+
+# Ambientes virtuais
+.venv/
+env/
+venv/
+
+# Relatórios, PDFs e imagens geradas dinamicamente
+src/dadospagamento.pdf
+src/dadospagamento2.pdf
+src/pixqrcode.png
+relatorio.xlsx
+temp_relatorios/
+
+# Logs e Bancos de Dados locais (Se o SQLite criar arquivo local, coloque o nome aqui)
+logs/
+db/*.sqlite3
+db/*.db
+
+# Arquivos de Compilação (PyInstaller, executáveis, etc)
+output/
+build/
+dist/
+*.spec
+
+# Cache do Python
+__pycache__/
+*.pyc

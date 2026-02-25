@@ -1,0 +1,6 @@
+- É um ofício que foi enviado pelo cartório, normalmente é enviado por E-mail ou por Malote digital
+- Digitalizar tanto o ofício quanto o seu comprovante de envio (seja por e-mail ou malote), devem ficar no mesmo arquivo PDF, ou seja, um documento único.
+
+Número do documento, basta digitar o número do ofício, ex.: Ofício nº 1148/2025, digitar apenas o número "1148" 
+
+Caso ainda tenha dúvida, entrar em contato com o setor de TI.
