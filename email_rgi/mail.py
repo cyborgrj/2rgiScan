@@ -5,17 +5,26 @@ from email.mime.application import MIMEApplication
 from email.mime.base import MIMEBase
 from email import encoders
 
-CONTA_PADRAO = 'cartoriorgirj@gmail.com'
+CONTA_PADRAO = "cartoriorgirj@gmail.com"
 
 
-def envia_email(email_dest, nome_documento, numero_doc, data_hora_tabela, usuario_logado, usuario_digitalizacao):
-    status = ''
+def envia_email(
+    email_dest,
+    nome_documento,
+    numero_doc,
+    data_hora_tabela,
+    usuario_logado,
+    usuario_digitalizacao,
+):
+    status = ""
     message = MIMEMultipart()
     message["To"] = email_dest
     message["From"] = CONTA_PADRAO
-    message["Subject"] = f'Divergência de Imagem Digitalizada: {nome_documento}: {numero_doc}'
+    message["Subject"] = (
+        f"Divergência de Imagem Digitalizada: {nome_documento}: {numero_doc}"
+    )
 
-    body = f'''
+    body = f"""
     <font size=3>
     <b> Divergência na digitalização de {nome_documento}, com número: {numero_doc} </b>
     </font>
@@ -34,9 +43,9 @@ def envia_email(email_dest, nome_documento, numero_doc, data_hora_tabela, usuari
    
     <br>
     <br>
-    Favor verificar a divergência e, em seguida, prosseguir com a resolução da questão.'''
+    Favor verificar a divergência e, em seguida, prosseguir com a resolução da questão."""
 
-    messageText = MIMEText(body,'html')
+    messageText = MIMEText(body, "html")
     message.attach(messageText)
 
     ###### Desativado pois não iremos enviar anexo inicialmente #####
@@ -56,45 +65,47 @@ def envia_email(email_dest, nome_documento, numero_doc, data_hora_tabela, usuari
     # message.attach(pdf)
 
     email = CONTA_PADRAO
-    #password incorreto para testes = 'trxnykgianxboom'
-    password = 'lrukoabdjvlkmhlw'
+    # password incorreto para testes = 'trxnykgianxboom'
+    password = "lrukoabdjvlkmhlw"
 
-    server = smtplib.SMTP('smtp.gmail.com:587')
-    server.ehlo('Gmail')
+    server = smtplib.SMTP("smtp.gmail.com:587")
+    server.ehlo("Gmail")
     server.starttls()
     try:
-        server.login(email,password)
+        server.login(email, password)
     except Exception as error:
-        print(f'Erro ao enviar e-mail: {error}')
+        print(f"Erro ao enviar e-mail: {error}")
         server.quit()
         return error
     else:
-        status = 'sucesso'
+        status = "sucesso"
 
     fromaddr = CONTA_PADRAO
-    toaddrs  = email_dest
+    toaddrs = email_dest
     try:
-        server.sendmail(fromaddr,toaddrs,message.as_string())
+        server.sendmail(fromaddr, toaddrs, message.as_string())
     except Exception as error:
-        print(f'Erro ao enviar e-mail: {error}')
+        print(f"Erro ao enviar e-mail: {error}")
         server.quit()
         return error
     else:
-        status = 'sucesso'
-    
+        status = "sucesso"
+
     server.quit()
     return status
+
+
 if __name__ == "__main__":
     try:
-        envia_email(    
-        email_dest="cartorio@2rgi-rj.com.br",
-        nome_documento="Matrícula",
-        numero_doc='145200',
-        data_hora_tabela="14/05/2025 09:18",
-        usuario_logado='edu',
-        usuario_digitalizacao='crd'
+        envia_email(
+            email_dest="ajud.apple@gmail.com",
+            nome_documento="Matrícula",
+            numero_doc="145200",
+            data_hora_tabela="02/03/2026 10:18",
+            usuario_logado="edu",
+            usuario_digitalizacao="crd",
         )
     except Exception as err:
         print(err)
     finally:
-        print('E-mail funcionando, e enviado com sucesso!')
+        print("E-mail funcionando, e enviado com sucesso!")

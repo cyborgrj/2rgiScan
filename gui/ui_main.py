@@ -1222,6 +1222,7 @@ class Ui_MainWindow(object):
         self.combo_acesso_usuario.addItem("")
         self.combo_acesso_usuario.addItem("")
         self.combo_acesso_usuario.addItem("")
+        self.combo_acesso_usuario.addItem("")
         self.combo_acesso_usuario.setObjectName(u"combo_acesso_usuario")
         self.combo_acesso_usuario.setGeometry(QRect(20, 220, 271, 51))
         self.label_sigla_4 = QLabel(self.atualiza_usuario)
@@ -1260,6 +1261,284 @@ class Ui_MainWindow(object):
         self.label_5.raise_()
         self.config_gerais.raise_()
         self.atualiza_usuario.raise_()
+        self.tab_6 = QWidget()
+        self.tab_6.setObjectName(u"tab_6")
+        self.tab_6.setStyleSheet(u"QLabel{\n"
+"\n"
+"background-color: transparent;\n"
+"\n"
+"}\n"
+"\n"
+"\n"
+"\n"
+"QWidget\n"
+"\n"
+"{\n"
+"\n"
+"background-color: rgb(42, 42, 42);\n"
+"\n"
+"color: rgb(245, 245, 245);\n"
+"\n"
+"}\n"
+"\n"
+"\n"
+"\n"
+"QPushButton\n"
+"\n"
+"{\n"
+"\n"
+" background-color:rgb(60,60,60);\n"
+"\n"
+" color:rgb(242,242,242);\n"
+"\n"
+" border-radius:10px;\n"
+"\n"
+"}\n"
+"\n"
+"\n"
+"\n"
+"QPushButton:Hover\n"
+"\n"
+"{\n"
+"\n"
+" background-color:rgb(142,142,142);\n"
+"\n"
+" border-radius:10px;\n"
+"\n"
+" color:rgb(42, 42, 42);\n"
+"\n"
+" border-bottom:2px solid grey;\n"
+"\n"
+" border-right:2px solid grey;\n"
+"\n"
+"}\n"
+"\n"
+"\n"
+"\n"
+"QPushButton:Pressed\n"
+"\n"
+"{\n"
+"\n"
+" color:rgb(242,242,242);\n"
+"\n"
+" border-radius:10px;\n"
+"\n"
+" background-color:rgb(42, 42, 42);\n"
+"\n"
+" border:2px solid grey;\n"
+"\n"
+" padding: 5px;\n"
+"\n"
+" font: 75 13pt \"MS Shell Dlg 2\";\n"
+"\n"
+"}\n"
+"\n"
+"\n"
+"\n"
+"QComboBox{\n"
+"\n"
+"border: 2px solid white;\n"
+"\n"
+"color: rgb(248, 248, 242);\n"
+"\n"
+"padding: 10px;\n"
+"\n"
+"border-radius: 5px\n"
+"\n"
+"}"
+                        "\n"
+"\n"
+"\n"
+"\n"
+"QComboBox:drop-down {\n"
+"\n"
+"border: 0px\n"
+"\n"
+"}\n"
+"\n"
+"\n"
+"\n"
+"QComboBox:down-arrow {\n"
+"\n"
+"image: url(:/icons/icons/chevron-down.svg);\n"
+"\n"
+"margin-right:10\n"
+"\n"
+"}\n"
+"\n"
+"\n"
+"\n"
+"QComboBox:on {\n"
+"\n"
+"border: 2px solid rgb(248, 248, 242);\n"
+"\n"
+"}\n"
+"\n"
+"\n"
+"\n"
+"QComboBox QListView {\n"
+"\n"
+"border: 2px solid white;\n"
+"\n"
+"color: rgb(248, 248, 242);\n"
+"\n"
+"padding: 10px;\n"
+"\n"
+"border-radius: 5px\n"
+"\n"
+"}\n"
+"\n"
+"\n"
+"\n"
+"QComboBox QListView:item{\n"
+"\n"
+"padding-left: 10px;\n"
+"\n"
+"background-color: rgb(40, 42, 54);\n"
+"\n"
+"}\n"
+"\n"
+"\n"
+"\n"
+"QComboBox QListView:item:hover{\n"
+"\n"
+"background-color: rgb(29, 30, 40);\n"
+"\n"
+"}\n"
+"\n"
+"\n"
+"\n"
+"QComboBox QListView:item:selected{\n"
+"\n"
+"background-color: rgb(29, 30, 40);\n"
+"\n"
+"}")
+        self.campoNumDocumento_entrada = QLineEdit(self.tab_6)
+        self.campoNumDocumento_entrada.setObjectName(u"campoNumDocumento_entrada")
+        self.campoNumDocumento_entrada.setGeometry(QRect(470, 260, 101, 41))
+        self.campoNumDocumento_entrada.setStyleSheet(u"background-color: rgb(42, 42, 42);\n"
+"\n"
+"color: rgb(245, 245, 245);")
+        self.campoNumDocumento_entrada.setMaxLength(6)
+        self.campoNumDocumento_entrada.setAlignment(Qt.AlignCenter)
+        self.buttonVerificar_2 = QPushButton(self.tab_6)
+        self.buttonVerificar_2.setObjectName(u"buttonVerificar_2")
+        self.buttonVerificar_2.setGeometry(QRect(540, 450, 151, 51))
+        self.buttonVerificar_2.setIcon(icon3)
+        self.forma_9 = QLabel(self.tab_6)
+        self.forma_9.setObjectName(u"forma_9")
+        self.forma_9.setGeometry(QRect(20, 59, 971, 541))
+        self.forma_9.setStyleSheet(u"font: 57 300pt \"Marlett\";\n"
+"\n"
+"color: rgba(248, 248, 248, 3);\n"
+"\n"
+"background:transparent;")
+        self.lblTrabalho_entrada = QLabel(self.tab_6)
+        self.lblTrabalho_entrada.setObjectName(u"lblTrabalho_entrada")
+        self.lblTrabalho_entrada.setGeometry(QRect(350, 90, 471, 31))
+        self.lblTrabalho_entrada.setStyleSheet(u"background-color: transparent;")
+        self.lblTrabalho_entrada.setAlignment(Qt.AlignCenter)
+        self.forma_10 = QLabel(self.tab_6)
+        self.forma_10.setObjectName(u"forma_10")
+        self.forma_10.setGeometry(QRect(410, -109, 501, 411))
+        self.forma_10.setStyleSheet(u"font: 57 500pt \"Marlett\";\n"
+"\n"
+"color: rgba(248, 248, 248, 3);\n"
+"\n"
+"background: transparent;")
+        self.buttonConferenciaErro_2 = QPushButton(self.tab_6)
+        self.buttonConferenciaErro_2.setObjectName(u"buttonConferenciaErro_2")
+        self.buttonConferenciaErro_2.setGeometry(QRect(360, 320, 131, 31))
+        self.setTrabalhoCB_entrada = QComboBox(self.tab_6)
+        self.setTrabalhoCB_entrada.addItem("")
+        self.setTrabalhoCB_entrada.addItem("")
+        self.setTrabalhoCB_entrada.addItem("")
+        self.setTrabalhoCB_entrada.addItem("")
+        self.setTrabalhoCB_entrada.addItem("")
+        self.setTrabalhoCB_entrada.addItem("")
+        self.setTrabalhoCB_entrada.addItem("")
+        self.setTrabalhoCB_entrada.addItem("")
+        self.setTrabalhoCB_entrada.addItem("")
+        self.setTrabalhoCB_entrada.setObjectName(u"setTrabalhoCB_entrada")
+        self.setTrabalhoCB_entrada.setGeometry(QRect(350, 150, 471, 41))
+        self.setTrabalhoCB_entrada.setStyleSheet(u"")
+        self.forma_11 = QLabel(self.tab_6)
+        self.forma_11.setObjectName(u"forma_11")
+        self.forma_11.setGeometry(QRect(-60, 9, 611, 521))
+        self.forma_11.setStyleSheet(u"font: 700pt \"Wingdings 3\";\n"
+"\n"
+"color: rgba(248, 248, 248, 10);\n"
+"\n"
+"background: transparent;\n"
+"\n"
+"")
+        self.buttonDiminuir_Entrada = QPushButton(self.tab_6)
+        self.buttonDiminuir_Entrada.setObjectName(u"buttonDiminuir_Entrada")
+        self.buttonDiminuir_Entrada.setGeometry(QRect(280, 320, 31, 28))
+        self.forma_12 = QLabel(self.tab_6)
+        self.forma_12.setObjectName(u"forma_12")
+        self.forma_12.setGeometry(QRect(400, -13, 671, 541))
+        self.forma_12.setStyleSheet(u"font: 600pt \"Wingdings 3\";\n"
+"\n"
+"color: rgba(248, 248, 248, 10);\n"
+"\n"
+"background: transparent;\n"
+"\n"
+"")
+        self.buttonGravar_Entrada = QPushButton(self.tab_6)
+        self.buttonGravar_Entrada.setObjectName(u"buttonGravar_Entrada")
+        self.buttonGravar_Entrada.setGeometry(QRect(210, 450, 251, 51))
+        self.buttonGravar_Entrada.setIcon(icon)
+        self.buttonLimpar_Entrada = QPushButton(self.tab_6)
+        self.buttonLimpar_Entrada.setObjectName(u"buttonLimpar_Entrada")
+        self.buttonLimpar_Entrada.setGeometry(QRect(710, 450, 151, 51))
+        self.buttonLimpar_Entrada.setIcon(icon2)
+        self.lblDocumento_entrada = QLabel(self.tab_6)
+        self.lblDocumento_entrada.setObjectName(u"lblDocumento_entrada")
+        self.lblDocumento_entrada.setGeometry(QRect(280, 260, 181, 41))
+        self.lblDocumento_entrada.setStyleSheet(u"background-color: transparent;")
+        self.label_2 = QLabel(self.tab_6)
+        self.label_2.setObjectName(u"label_2")
+        self.label_2.setGeometry(QRect(0, 0, 891, 51))
+        self.label_2.setStyleSheet(u"font: 75 18pt \"MS Shell Dlg 2\";\n"
+"\n"
+"text-decoration: underline;")
+        self.label_2.setAlignment(Qt.AlignCenter)
+        self.buttonAumentar_Entrada = QPushButton(self.tab_6)
+        self.buttonAumentar_Entrada.setObjectName(u"buttonAumentar_Entrada")
+        self.buttonAumentar_Entrada.setGeometry(QRect(540, 320, 31, 28))
+        self.buttonDigitalizar_Entrada = QPushButton(self.tab_6)
+        self.buttonDigitalizar_Entrada.setObjectName(u"buttonDigitalizar_Entrada")
+        self.buttonDigitalizar_Entrada.setGeometry(QRect(30, 450, 161, 51))
+        self.buttonDigitalizar_Entrada.setIcon(icon1)
+        self.dateEditData_entrada = QDateEdit(self.tab_6)
+        self.dateEditData_entrada.setObjectName(u"dateEditData_entrada")
+        self.dateEditData_entrada.setGeometry(QRect(130, 150, 181, 41))
+        self.dateEditData_entrada.setFont(font)
+        self.lblTrabalho_entrada_2 = QLabel(self.tab_6)
+        self.lblTrabalho_entrada_2.setObjectName(u"lblTrabalho_entrada_2")
+        self.lblTrabalho_entrada_2.setGeometry(QRect(110, 90, 221, 31))
+        self.lblTrabalho_entrada_2.setStyleSheet(u"background-color: transparent;")
+        self.lblTrabalho_entrada_2.setAlignment(Qt.AlignCenter)
+        self.tabWidget.addTab(self.tab_6, "")
+        self.forma_11.raise_()
+        self.forma_9.raise_()
+        self.forma_12.raise_()
+        self.forma_10.raise_()
+        self.campoNumDocumento_entrada.raise_()
+        self.buttonVerificar_2.raise_()
+        self.lblTrabalho_entrada.raise_()
+        self.buttonConferenciaErro_2.raise_()
+        self.setTrabalhoCB_entrada.raise_()
+        self.buttonDiminuir_Entrada.raise_()
+        self.buttonGravar_Entrada.raise_()
+        self.buttonLimpar_Entrada.raise_()
+        self.lblDocumento_entrada.raise_()
+        self.label_2.raise_()
+        self.buttonAumentar_Entrada.raise_()
+        self.buttonDigitalizar_Entrada.raise_()
+        self.dateEditData_entrada.raise_()
+        self.lblTrabalho_entrada_2.raise_()
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
@@ -1307,7 +1586,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -1385,6 +1664,7 @@ class Ui_MainWindow(object):
         self.combo_acesso_usuario.setItemText(2, QCoreApplication.translate("MainWindow", u"Documentos", None))
         self.combo_acesso_usuario.setItemText(3, QCoreApplication.translate("MainWindow", u"Consulta", None))
         self.combo_acesso_usuario.setItemText(4, QCoreApplication.translate("MainWindow", u"Digitaliza\u00e7\u00e3o Simples", None))
+        self.combo_acesso_usuario.setItemText(5, QCoreApplication.translate("MainWindow", u"Digitaliza\u00e7\u00e3o Entrada", None))
 
         self.label_sigla_4.setText(QCoreApplication.translate("MainWindow", u"Senha do usu\u00e1rio:", None))
         self.label_sigla_5.setText(QCoreApplication.translate("MainWindow", u"Confirmar senha:", None))
@@ -1393,5 +1673,31 @@ class Ui_MainWindow(object):
         self.label_6.setText("")
         self.label_8.setText("")
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_5), QCoreApplication.translate("MainWindow", u"Configura\u00e7\u00f5es", None))
+        self.buttonVerificar_2.setText(QCoreApplication.translate("MainWindow", u"  Verificar", None))
+        self.forma_9.setText(QCoreApplication.translate("MainWindow", u"y", None))
+        self.lblTrabalho_entrada.setText(QCoreApplication.translate("MainWindow", u"TIPO DE DOCUMENTO", None))
+        self.forma_10.setText(QCoreApplication.translate("MainWindow", u"a", None))
+        self.buttonConferenciaErro_2.setText(QCoreApplication.translate("MainWindow", u"Confer\u00eancia", None))
+        self.setTrabalhoCB_entrada.setItemText(0, QCoreApplication.translate("MainWindow", u"1 - ESCRITURA", None))
+        self.setTrabalhoCB_entrada.setItemText(1, QCoreApplication.translate("MainWindow", u"2 - ANEXO", None))
+        self.setTrabalhoCB_entrada.setItemText(2, QCoreApplication.translate("MainWindow", u"3 - CERTID\u00c3O", None))
+        self.setTrabalhoCB_entrada.setItemText(3, QCoreApplication.translate("MainWindow", u"4 - PROCESSO", None))
+        self.setTrabalhoCB_entrada.setItemText(4, QCoreApplication.translate("MainWindow", u"5 - OF\u00cdCIO", None))
+        self.setTrabalhoCB_entrada.setItemText(5, QCoreApplication.translate("MainWindow", u"6 - CARTA DE ARREMATA\u00c7\u00c3O", None))
+        self.setTrabalhoCB_entrada.setItemText(6, QCoreApplication.translate("MainWindow", u"7 - TERMO DE QUITA\u00c7\u00c3O", None))
+        self.setTrabalhoCB_entrada.setItemText(7, QCoreApplication.translate("MainWindow", u"8 - ATA", None))
+        self.setTrabalhoCB_entrada.setItemText(8, QCoreApplication.translate("MainWindow", u"9 - REQUERIMENTO", None))
+
+        self.forma_11.setText(QCoreApplication.translate("MainWindow", u"z", None))
+        self.buttonDiminuir_Entrada.setText(QCoreApplication.translate("MainWindow", u"-", None))
+        self.forma_12.setText(QCoreApplication.translate("MainWindow", u"y", None))
+        self.buttonGravar_Entrada.setText(QCoreApplication.translate("MainWindow", u"  Gravar na SERVCOM", None))
+        self.buttonLimpar_Entrada.setText(QCoreApplication.translate("MainWindow", u"Limpar", None))
+        self.lblDocumento_entrada.setText(QCoreApplication.translate("MainWindow", u"N\u00ba DO DOCUMENTO:", None))
+        self.label_2.setText(QCoreApplication.translate("MainWindow", u"DIGITALIZA\u00c7\u00c3O - ENTRADA DE DOCUMENTOS", None))
+        self.buttonAumentar_Entrada.setText(QCoreApplication.translate("MainWindow", u"+", None))
+        self.buttonDigitalizar_Entrada.setText(QCoreApplication.translate("MainWindow", u"  Digitalizar", None))
+        self.lblTrabalho_entrada_2.setText(QCoreApplication.translate("MainWindow", u"DATA ENTRADA", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_6), QCoreApplication.translate("MainWindow", u"Documentos Entrada", None))
     # retranslateUi
 
