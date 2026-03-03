@@ -52,7 +52,11 @@ from db.db_handler import DBHandler
 from utils.logger import logger
 from utils.loading import LoadingDialog
 from utils.helpers import contar_paginas_tiff
-from utils.scanner_utils import processar_digitalizacao, processar_digitalizacao_simples
+from utils.scanner_utils import (
+    processar_digitalizacao,
+    processar_digitalizacao_simples,
+    processar_digitalizacao_entrada,
+)
 
 ########################################################################
 ## Relatórios/PDF
@@ -281,7 +285,7 @@ class Configuracoes:
         self.arquivo = arquivo
         self.config = configparser.ConfigParser()
         self.config.optionxform = str  # preserva maiúsculas/minúsculas se necessário
-        self.config.read(arquivo)
+        self.config.read(arquivo, encoding="utf-8")
 
     def get_servidor(self):
         return self.config["REDES"]["servidor"].rstrip("\\")
@@ -289,6 +293,14 @@ class Configuracoes:
     def _join_path(self, *partes):
         """Junta partes do caminho e normaliza para evitar barras duplicadas ou caminhos quebrados."""
         return os.path.normpath(os.path.join(*partes))
+
+    # Dicionário dinâmico para os tipos de documentos de Entrada
+    def get_tipos_entrada(self):
+        """Retorna os tipos de entrada direto como um dicionário"""
+        if "TIPOS_ENTRADA" in self.config:
+            # Transforma a sessão inteira do config em um dict do Python
+            return dict(self.config["TIPOS_ENTRADA"])
+        return {}  # Se alguém apagar a sessão por engano, não quebra o sistema
 
     def get_locais_de_rede(self):
         locais_raw = self.config.get("REDES", "locais_de_rede")
@@ -325,7 +337,7 @@ class Configuracoes:
         self.config["REDES"]["temp_index_usuario"] = caminho_temp_index_usuario
         self.config["NAPS2"]["caminho_naps2"] = caminho_naps2
 
-        with open(self.arquivo, "w") as arquivo:
+        with open(self.arquivo, "w", encoding="utf-8") as arquivo:
             self.config.write(arquivo)
 
         # Recarrega para garantir que a nova config seja usada a seguir
@@ -514,19 +526,33 @@ class MainWindow(QMainWindow):
         self.ui.buttonDigitalizar.clicked.connect(
             lambda: self.showStatusTip("Digitalizar")
         )
+        self.ui.buttonDigitalizar_Entrada.clicked.connect(
+            lambda: self.showStatusTip("Digitalizar")
+        )
         self.ui.buttonDigitalizar.clicked.connect(
             lambda: self.iniciaDigitalizacao(somente_visualizar=False)
+        )
+        self.ui.buttonDigitalizar_Entrada.clicked.connect(
+            lambda: self.digitalizar_entrada()
         )
         self.ui.buttonConsultarDocumento.clicked.connect(
             lambda: self.iniciaDigitalizacao(somente_visualizar=True)
         )
         self.ui.buttonGravar.clicked.connect(self.gravarDocumentoDigitalizado)
+        self.ui.buttonGravar_Entrada.clicked.connect(self.gravar_documento_entrada)
         self.ui.buttonGravar.clicked.connect(lambda: self.showStatusTip("Gravar"))
+        self.ui.buttonGravar_Entrada.clicked.connect(
+            lambda: self.showStatusTip("Gravar")
+        )
         self.ui.buttonLimpar.clicked.connect(lambda: self.showStatusTip("Limpar"))
+        self.ui.buttonLimpar_Entrada.clicked.connect(
+            lambda: self.showStatusTip("Limpar")
+        )
         self.ui.buttonLimparDocumentosSimples.clicked.connect(
             lambda: self.showStatusTip("Limpar")
         )
         self.ui.buttonLimpar.clicked.connect(lambda: self.limpaCampos())
+        self.ui.buttonLimpar_Entrada.clicked.connect(lambda: self.limpaCampos())
         self.ui.buttonLimparDocumentosSimples.clicked.connect(
             lambda: self.limpaCampos()
         )
@@ -534,6 +560,9 @@ class MainWindow(QMainWindow):
             self.abrir_para_conferencia
         )
         self.ui.buttonLimpar.clicked.connect(
+            lambda: self.habilitaDigitarDocumento(True)
+        )
+        self.ui.buttonLimpar_Entrada.clicked.connect(
             lambda: self.habilitaDigitarDocumento(True)
         )
         self.ui.buttonLimparDocumentosSimples.clicked.connect(
@@ -562,7 +591,7 @@ class MainWindow(QMainWindow):
         self.habilitaDigitarDocumento(True)
         self.setupAuditoria()
         self.atualizarCamposAuditoria()
-        self.verificaAcessos(self.acesso)
+        self.configurar_acessos(self.acesso)
 
         # Área de gerenciamento de usuários
         self.ui.button_verificar_sigla.clicked.connect(lambda: self.verifica_sigla())
@@ -607,11 +636,157 @@ class MainWindow(QMainWindow):
 
         self.ui.campoNumDocumento.setFocus()
 
+        self.setupEntrada()
+
     def exibir_exemplo_documento_simples(self):
         tipo = self.ui.comboBoxTipoSimples.currentData()
         dialog = ExemploDocumentoDialog(tipo, self)
         dialog.resize(1300, 680)
         dialog.exec()
+
+    def obter_proximo_indice_entrada(self, caminho_pasta):
+        """
+        Lê a pasta do protocolo e retorna o próximo número sequencial disponível.
+        Se a pasta estiver vazia ou não existir, retorna 1.
+        """
+        if not os.path.exists(caminho_pasta):
+            return 1  # A pasta nem existe ainda, então é o arquivo 01
+
+        arquivos = [f for f in os.listdir(caminho_pasta) if f.lower().endswith(".pdf")]
+        max_indice = 0
+
+        for arquivo in arquivos:
+            # Pega só o nome do arquivo, ignorando a extensão .pdf
+            nome_base = os.path.splitext(arquivo)[0]
+
+            # Tenta quebrar pelo padrão " - "
+            partes = nome_base.split(" - ")
+
+            if len(partes) > 0:
+                try:
+                    # Tenta converter a primeira parte "01" para inteiro (1)
+                    indice_atual = int(partes[0])
+                    if indice_atual > max_indice:
+                        max_indice = indice_atual
+                except ValueError:
+                    # Se não conseguiu converter (ex: era um arquivo chamado "oficio.pdf"),
+                    # simplesmente ignora esse arquivo e passa para o próximo.
+                    pass
+
+        return max_indice + 1
+
+    def digitalizar_entrada(self):
+        # Verifica se a pasta temp_index está vazia (reaproveitando sua lógica)
+        caminho_arquivo_temp = os.path.join(
+            self.configuracoes.get_caminho_temp_index(),
+            self.configuracoes.get_temp_index_usuario(),
+        )
+        if os.path.exists(caminho_arquivo_temp):
+            arquivos = [
+                f
+                for f in os.listdir(caminho_arquivo_temp)
+                if f.lower().endswith((".PDF", ".pdf"))
+            ]
+            if arquivos:
+                QMessageBox.warning(
+                    self,
+                    "Aviso",
+                    "Esvazie a pasta temporária (ou limpe a tela) antes de digitalizar.",
+                )
+                return
+
+        # Abre o NAPS2 usando a flag de digitalização simples
+        self.abrirNAPS2(
+            caminho_arquivo="", somente_visualizar=False, digitalizacao_simples=True
+        )
+
+    def gravar_documento_entrada(self):
+        protocolo_texto = self.ui.campoNumDocumento_entrada.text().strip()
+        # Pega a data e formata exatamente como "24-02-2026"
+        data_digitada = self.ui.dateEditData_entrada.date().toString("dd_MM_yyyy")
+
+        # Pega o valor do ComboBox de tipo do documento (ex: "escritura")
+        tipo_arquivo = self.ui.setTrabalhoCB_entrada.currentData()
+
+        # Validações básicas
+        if not protocolo_texto or not data_digitada:
+            QMessageBox.warning(
+                self, "Erro", "Numero de protocolo e data são obrigatórios!"
+            )
+            return
+
+        try:
+            num_protocolo = int(protocolo_texto)
+        except ValueError:
+            QMessageBox.warning(self, "Erro", "O protocolo deve conter apenas números!")
+
+        # 1. Pega o próximo número com segurança
+        protocolo_formatado = f"{num_protocolo:06d}"
+        pasta_xxx = protocolo_formatado[:3]
+        pasta_yyy = protocolo_formatado[3:]
+
+        caminho_base_protocolo = self.configuracoes.get_caminho_por_indice(1)
+        caminho_destino_pasta = os.path.normpath(
+            os.path.join(caminho_base_protocolo, pasta_xxx, pasta_yyy)
+        )
+        os.makedirs(caminho_destino_pasta, exist_ok=True)
+
+        # Agora gerar o próximo número na lista de arquivos.
+        proximo_numero = self.obter_proximo_indice_entrada(caminho_destino_pasta)
+
+        nome_base = f"{proximo_numero:02d} - {data_digitada} - {tipo_arquivo}"
+        caminho_final = os.path.join(caminho_destino_pasta, f"{nome_base}.pdf")
+
+        contador_extra = 1
+        while os.path.exists(caminho_final):
+            # Se já existe, tenta "escritura 2.pdf", "escritura 3.pdf", etc.
+            caminho_final = os.path.join(
+                caminho_destino_pasta, f"{nome_base} ({contador_extra}).pdf"
+            )
+            contador_extra += 1
+
+        # 4. Processar a digitalização
+        try:
+            # Chama a sua função utilitária que faz o trabalho pesado
+            processar_digitalizacao_entrada(
+                configuracoes=self.configuracoes,
+                caminho_destino_pdf=caminho_final,
+            )
+
+            # Ggravar no banco de dados (Auditoria), no futuro
+            # self.gravaBanco(...)
+
+            QMessageBox.information(
+                self,
+                "Sucesso",
+                f"Documento salvo com sucesso em:\n{caminho_final}",
+            )
+
+        except FileNotFoundError:
+            QMessageBox.critical(
+                self,
+                "Erro",
+                "Nenhuma digitalização encontrada. Escaneie o documento primeiro.",
+            )
+        except Exception as e:
+            QMessageBox.critical(self, "Erro ao Gravar", f"Ocorreu um erro: {str(e)}")
+
+        self.habilitaDigitarDocumento(True)
+
+    def setupEntrada(self):
+        # 1. Configurar a Data Atual
+        hoje = QDate.currentDate()
+        self.ui.dateEditData_entrada.setDate(hoje)
+        self.ui.dateEditData_entrada.setCalendarPopup(True)
+
+        # 2. Popular o ComboBox Dinamicamente
+        self.ui.setTrabalhoCB_entrada.clear()
+
+        # Recuperar os tipos de documentos a partir do config.ini
+        tipos_dict = self.configuracoes.get_tipos_entrada()
+        for nome_exibicao, valor_arquivo in tipos_dict.items():
+            # Adiciona o nome visível e o valor embutido (userData)
+            self.ui.setTrabalhoCB_entrada.addItem(nome_exibicao, userData=valor_arquivo)
 
     def setupDigitalizacaoSimples(self):
         # Inicializar data
@@ -862,6 +1037,7 @@ class MainWindow(QMainWindow):
             2: "documentos",
             3: "consulta",
             4: "digitalização_simples",
+            5: "digitalização_entrada",
         }
 
         sigla = self.ui.campo_sigla.text().strip().lower()
@@ -931,14 +1107,19 @@ class MainWindow(QMainWindow):
 
     def verifica_sigla(self):
         self.dbUsers.connect_users()
+
+        # DICIONÁRIO CORRIGIDO: String -> Índice do ComboBox
         acesso = {
             "digitalização": 0,
             "administrador": 1,
             "documentos": 2,
             "consulta": 3,
-            "digitalizacao_simples": 4,
+            "digitalização_simples": 4,
+            "digitalização_entrada": 5,
         }
+
         sigla = self.ui.campo_sigla.text()
+
         if sigla == "":
             QMessageBox.information(
                 self,
@@ -946,10 +1127,21 @@ class MainWindow(QMainWindow):
                 "É necessário informar a sigla para criar ou atualizar um usuário!",
             )
             return
+
         usuario = self.dbUsers.get_user_info(sigla)
+
         if usuario["existe"]:
             self.ui.campo_nome_usuario.setText(usuario["nome_usuario"])
-            self.ui.combo_acesso_usuario.setCurrentIndex(acesso[usuario["acesso"]])
+
+            # Pega a string do banco (ex: "digitalização")
+            nivel_acesso_banco = usuario["acesso"]
+
+            # Usa o .get() para evitar um novo KeyError caso o banco retorne algo inesperado
+            indice_combo = acesso.get(
+                nivel_acesso_banco, 0
+            )  # 0 é o padrão (digitalização) se não achar
+            self.ui.combo_acesso_usuario.setCurrentIndex(indice_combo)
+
             self.ui.button_criar_atualizar.setText("Atualizar")
         else:
             self.ui.button_criar_atualizar.setText("Criar")
@@ -996,124 +1188,123 @@ class MainWindow(QMainWindow):
                 QMessageBox.information(self, "Sucesso", f"E-mail enviado com sucesso!")
                 logger.info(f"E-mail enviado com sucesso!")
             else:
-                QMessageBox.warning(self, "Erro", f"Erro ao enviar e-mail: {err}")
-                logger.error(f"Erro ao enviar e-mail: {err}")
+                QMessageBox.warning(
+                    self, "Erro", "Erro desconhecido ao enviar e-mail pelo servidor."
+                )
+                logger.error("Falha no teste de e-mail: Status diferente de sucesso.")
         except Exception as err:
+            QMessageBox.warning(self, "Erro", f"Falha na conexão de e-mail: {err}")
             logger.error(f"Erro ao enviar e-mail: {err}")
-        finally:
-            logger.info(f"E-mail enviado com sucesso!")
 
     def verificar_aba_conferencia(self, index):
         if self.ui.tabWidget.widget(index) == self.ui.tab_3:
             self.listar_digitalizacoes_para_conferencia(mostrar_mensagem=True)
 
-    def verificaAcessos(self, acesso: str):
-        if acesso == "digitalização":
-            self.liberarDigitalizar()
-        elif acesso == "administrador":
-            pass
-        elif acesso == "documentos":
-            self.liberaDocumentos()
-        elif acesso == "consulta":
-            self.liberaConsulta()
-        elif acesso == "digitalização_simples":
-            self.liberaDigitalizacaoSimples()
-        else:
-            QMessageBox.warning(self, "Erro", f"Acesso inválido: {acesso}")
-            logger.error(f"Acesso inválido: {acesso}")
-
-    # Controlar acessos para usuário de digitalização geral ou digitalização somente de documentos
-    def liberaDocumentos(self):
-        self.ui.tabWidget.removeTab(3)
-        self.ui.tabWidget.removeTab(1)
-        self.ui.tabWidget.removeTab(2)
-
-    def liberaDigitalizacaoSimples(self):
-        self.ui.tabWidget.removeTab(0)
-        self.ui.tabWidget.removeTab(2)
-        self.ui.tabWidget.removeTab(1)
-        self.ui.tabWidget.removeTab(1)
-
-    def liberarDigitalizar(self):
-        self.ui.tabWidget.removeTab(4)
-        self.ui.tabWidget.removeTab(3)
-
-    def liberaConsulta(self):
-        self.ui.tabWidget.removeTab(3)
-        self.ui.tabWidget.removeTab(1)
-        self.ui.tabWidget.removeTab(2)
-        self.ui.tabWidget.removeTab(1)
-        self.ui.tabWidget.setTabText(0, "Consulta de Documentos")
-        self.ui.label.setText("Consulta de documentos do Cartório")
-        self.ui.buttonDigitalizar.setVisible(False)
-        self.ui.buttonGravar.setVisible(False)
-        self.ui.buttonVerificar.setVisible(False)
-        self.ui.buttonConsultarDocumento.setVisible(True)
-
     def setupAuditoria(self):
-        # Filtro principal
+        # 1. Configuração de Filtros (Conexões feitas apenas UMA vez aqui)
         self.ui.comboBoxFiltro.addItems(["Usuário", "Documento"])
         self.ui.comboBoxFiltro.currentIndexChanged.connect(
             self.atualizarCamposAuditoria
         )
+        # Conectamos a combo dinâmica aqui também
+        self.ui.comboBoxDinamica.currentIndexChanged.connect(
+            self.atualizarCamposDocumento
+        )
 
-        # Datas
+        # 2. Datas (Simplificado)
         hoje = QDate.currentDate()
-        tres_meses_atras = hoje.addMonths(-3)
-
-        self.ui.dateEditInicio.setDate(tres_meses_atras)
+        self.ui.dateEditInicio.setDate(hoje.addMonths(-1))
         self.ui.dateEditFinal.setDate(hoje)
-
         self.ui.dateEditInicio.setCalendarPopup(True)
         self.ui.dateEditFinal.setCalendarPopup(True)
 
-        # Inicialmente esconder todos os inputs específicos
-        self.ui.lineEditAnoCert.hide()
-        self.ui.lineEditNumCert.hide()
-        self.ui.lineEditNumDocumento.hide()
+        # 3. Atalhos de Teclado (Enter) - Agrupados para facilitar leitura
+        campos_busca = [
+            self.ui.lineEditNumDocumento,
+            self.ui.lineEditAnoCert,
+            self.ui.lineEditNumCert,
+        ]
+        for campo in campos_busca:
+            campo.returnPressed.connect(self.filtrarAuditoria)
+            campo.hide()  # Já esconde na inicialização
 
-        # Botão Listar e responsividade ao enter nos campos de digitação
         self.ui.buttonListar.clicked.connect(self.filtrarAuditoria)
-        self.ui.lineEditNumDocumento.returnPressed.connect(self.filtrarAuditoria)
-        self.ui.lineEditAnoCert.returnPressed.connect(self.filtrarAuditoria)
-        self.ui.lineEditNumCert.returnPressed.connect(self.filtrarAuditoria)
-
-        # Botão Cancelar
         self.ui.buttonCancelar.clicked.connect(self.resetarFiltrosAuditoria)
-        self.ui.buttonCancelar.clicked.connect(self.atualizarCamposAuditoria)
-
-        # # Botões Imprimir/Salvar
         self.ui.buttonImprimir.clicked.connect(self.gerar_pdf_auditoria)
-        # self.ui.buttonSalvar.clicked.connect(self.salvarRelatorioPDF)
+
+    def configurar_modo_consulta(self):
+        self.ui.tabWidget.setTabText(0, "Consulta de Documentos")
+        self.ui.label.setText("Consulta de documentos do Cartório")
+        # Esconde o que é de gravação
+        for btn in [
+            self.ui.buttonDigitalizar,
+            self.ui.buttonGravar,
+            self.ui.buttonVerificar,
+        ]:
+            btn.setVisible(False)
+        # Mostra o que é de busca
+        self.ui.buttonConsultarDocumento.setVisible(True)
+
+    def configurar_acessos(self, acesso):
+        """Única função necessária para gerenciar abas"""
+        todas_as_abas = [
+            self.ui.tab,
+            self.ui.tab_2,
+            self.ui.tab_3,
+            self.ui.tab_4,
+            self.ui.tab_5,
+            self.ui.tab_6,
+        ]
+
+        permissoes = {
+            "digitalização": [self.ui.tab, self.ui.tab_2, self.ui.tab_3],
+            "documentos": [self.ui.tab],
+            "consulta": [self.ui.tab],
+            "digitalização_simples": [self.ui.tab_2],
+            "digitalização_entrada": [self.ui.tab_6],
+            "administrador": todas_as_abas,  # Administrador vê tudo o que existir
+        }
+
+        abas_permitidas = permissoes.get(acesso, [])
+
+        for i in range(self.ui.tabWidget.count() - 1, -1, -1):
+            if self.ui.tabWidget.widget(i) not in abas_permitidas:
+                self.ui.tabWidget.removeTab(i)
+
+        if acesso == "consulta":
+            self.configurar_modo_consulta()
 
     def atualizarCamposAuditoria(self):
         filtro = self.ui.comboBoxFiltro.currentText()
 
+        # Bloqueia sinais temporariamente para limpar sem disparar atualizarCamposDocumento
+        self.ui.comboBoxDinamica.blockSignals(True)
         self.ui.comboBoxDinamica.clear()
-        self.ui.lineEditAnoCert.hide()
-        self.ui.lineEditNumCert.hide()
-        self.ui.lineEditNumDocumento.hide()
+
+        # Helper para esconder múltiplos elementos
+        elementos_doc = [
+            self.ui.lineEditAnoCert,
+            self.ui.lineEditNumCert,
+            self.ui.label_certidao,
+            self.ui.label_documento,
+            self.ui.lineEditNumDocumento,
+        ]
+        for el in elementos_doc:
+            el.hide()
 
         if filtro == "Usuário":
-            siglas = self.dbUsers.get_sigla_users()
-            usuarios = self.dbUsers.listar_nomes_usuarios([s[0] for s in siglas])
-            self.ui.comboBoxDinamica.addItems(usuarios)
-            self.ui.lineEditAnoCert.hide()
-            self.ui.lineEditNumCert.hide()
-            self.ui.label_certidao.hide()
-            self.ui.label_documento.hide()
-            self.ui.lineEditNumDocumento.hide()
             self.ui.comboBoxDinamica.setFixedWidth(391)
+            siglas = [s[0] for s in self.dbUsers.get_sigla_users()]
+            usuarios = self.dbUsers.listar_nomes_usuarios(siglas)
+            self.ui.comboBoxDinamica.addItems(usuarios)
 
         elif filtro == "Documento":
             self.ui.comboBoxDinamica.setFixedWidth(221)
-            self.ui.comboBoxDinamica.addItems(
-                nomes_documentos
-            )  # lista com nomes dos documentos
-            self.ui.comboBoxDinamica.currentIndexChanged.connect(
-                self.atualizarCamposDocumento
-            )
-            self.atualizarCamposDocumento()  # força atualizar o que for exibido
+            self.ui.comboBoxDinamica.addItems(nomes_documentos)
+            # Como limpamos os sinais, chamamos manualmente a primeira vez
+            self.atualizarCamposDocumento()
+
+        self.ui.comboBoxDinamica.blockSignals(False)
 
     def atualizarCamposDocumento(self):
         tipo = self.ui.comboBoxDinamica.currentIndex()
@@ -2042,8 +2233,10 @@ class MainWindow(QMainWindow):
         self.ui.campoNumAnoCertidao.setText(self.ano_corrente)
         self.ui.campoNumCertidao.setText("")
         self.ui.campoNumDocumento.setText("")
+        self.ui.campoNumDocumento_entrada.setText("")
         self.ui.lineEditNumeroDocumento.clear()
         self.ui.dateEditDataSimples.setDate(QDate.currentDate())
+        self.ui.dateEditData_entrada.setDate(QDate.currentDate())
 
         if self.ui.campoNumDocumento.isVisible():
             self.ui.campoNumDocumento.setFocus()
@@ -2052,6 +2245,8 @@ class MainWindow(QMainWindow):
 
         if self.ui.lineEditNumeroDocumento.isVisible():
             self.ui.lineEditNumeroDocumento.setFocus()
+
+        self.ui.campoNumDocumento_entrada.setFocus()
 
     def abrirNAPS2(
         self, caminho_arquivo="", somente_visualizar=False, digitalizacao_simples=False
@@ -2239,27 +2434,30 @@ class MainWindow(QMainWindow):
         self.ui.campoNumAnoCertidao.setEnabled(habilita)
         self.ui.campoNumCertidao.setEnabled(habilita)
         self.ui.campoNumDocumento.setEnabled(habilita)
+        self.ui.campoNumDocumento_entrada.setEnabled(habilita)
         self.ui.buttonDigitalizar.setEnabled(habilita)
         self.ui.buttonDigitalizarDocumentosSimples.setEnabled(habilita)
+        self.ui.buttonDigitalizar_Entrada.setEnabled(habilita)
         self.ui.lineEditNumeroDocumento.setEnabled(habilita)
         self.ui.dateEditDataSimples.setEnabled(habilita)
+        self.ui.dateEditData_entrada.setEnabled(habilita)
         self.ui.comboBoxTipoSimples.setEnabled(habilita)
         self.ui.setTrabalhoCB.setEnabled(habilita)
+        self.ui.setTrabalhoCB_entrada.setEnabled(habilita)
         self.ui.buttonGravar.setEnabled(not habilita)
         self.ui.buttonGravarDocumentosSimples.setEnabled(not habilita)
+        self.ui.buttonGravar_Entrada.setEnabled(not habilita)
         self.ui.buttonAumentar.setEnabled(habilita)
+        self.ui.buttonAumentar_Entrada.setEnabled(habilita)
         self.ui.buttonDiminuir.setEnabled(habilita)
+        self.ui.buttonDiminuir_Entrada.setEnabled(habilita)
         self.ui.buttonDigitalizar.setEnabled(habilita)
+        self.ui.buttonDigitalizar_Entrada.setEnabled(habilita)
         self.ui.buttonVerificar.setEnabled(habilita)
+        self.ui.buttonVerificar_2.setEnabled(habilita)
         self.ui.buttonConferenciaErro.setEnabled(habilita)
-        # if self.acesso == 'digitalização':
-        #     self.ui.tabWidget.setTabEnabled(1, habilita)
-        #     self.ui.tabWidget.setTabEnabled(2, habilita)
-        # elif self.acesso == 'administrador':
-        #     self.ui.tabWidget.setTabEnabled(1, habilita)
-        #     self.ui.tabWidget.setTabEnabled(2, habilita)
-        #     self.ui.tabWidget.setTabEnabled(3, habilita)
-        #     self.ui.tabWidget.setTabEnabled(4, habilita)
+        self.ui.buttonConferenciaErro_2.setEnabled(habilita)
+        self.ui.buttonConferenciaErro.setEnabled(habilita)
 
     def gravaBanco(
         self,
@@ -2613,7 +2811,7 @@ if __name__ == "__main__":
 
     app.setWindowIcon(QIcon(r"scan_icon.png"))
 
-    # Em vez de fechar o app minimizar para a system tray
+    # Caso queira em vez de fechar o app minimizar para a system tray, mude para False
     app.setQuitOnLastWindowClosed(True)
 
     # Criar o ícone do app e exibir na "system tray"

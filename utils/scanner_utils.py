@@ -3,29 +3,31 @@ import shutil
 from utils.logger import logger
 from PIL import Image
 
+
 def processar_digitalizacao_simples(configuracoes, caminho_destino_pdf):
     """
     Processa a digitalização simples: converte 0001.TIF da pasta temp_index para PDF e salva no caminho especificado.
-    
+
     :param configuracoes: Instância da classe Configuracoes
     :param caminho_destino_pdf: Caminho completo de onde salvar o PDF final (inclui nome do arquivo)
     """
 
     # Monta o caminho completo da imagem TIF na pasta temp_index do usuário
     caminho_temp_index = os.path.join(
-        configuracoes.get_caminho_temp_index(),
-        configuracoes.get_temp_index_usuario()
+        configuracoes.get_caminho_temp_index(), configuracoes.get_temp_index_usuario()
     )
-    arquivo_tif = os.path.join(caminho_temp_index, '0001.TIF')
+    arquivo_tif = os.path.join(caminho_temp_index, "0001.TIF")
 
     if not os.path.exists(arquivo_tif):
         logger.error(f"Arquivo TIFF da digitalização não encontrado: {arquivo_tif}")
-        raise FileNotFoundError(f"Arquivo TIFF da digitalização não encontrado: {arquivo_tif}")
+        raise FileNotFoundError(
+            f"Arquivo TIFF da digitalização não encontrado: {arquivo_tif}"
+        )
 
     try:
         # Converte o TIFF para PDF usando PIL
         with Image.open(arquivo_tif) as img:
-            img.convert('RGB').save(caminho_destino_pdf, "PDF")
+            img.convert("RGB").save(caminho_destino_pdf, "PDF")
             logger.info(f"PDF gerado em: {caminho_destino_pdf}")
             print(f"PDF gerado em: {caminho_destino_pdf}")
     except Exception as e:
@@ -40,41 +42,99 @@ def processar_digitalizacao_simples(configuracoes, caminho_destino_pdf):
         raise Exception(f"Erro ao remover arquivo TIFF temporário: {e}")
 
 
-def processar_digitalizacao(tipo_documento: int, num_documento, caminho_temp, caminho_base, caminho_backup, pasta_usuario, ano_cert=None, num_cert=None, tipo_operacao="novo nocumento") :
+def processar_digitalizacao_entrada(configuracoes, caminho_destino_pdf):
+    """
+    Processa a digitalização de entrada: copia 0001.PDF da pasta temp_index para o caminho especificado.
 
-    tipos_de_documento = ['matricula', 
-                        'Protocolo',
-                        'CERTIDAO',
-                        'auxiliar',
-                        'CERTIDAO',
-                        'Protocolo'
+    :param configuracoes: Instância da classe Configuracoes
+    :param caminho_destino_pdf: Caminho completo de onde salvar o PDF final (inclui nome do arquivo)
+    """
+
+    # Monta o caminho completo do arquivo PDF na pasta temp_index do usuário
+    caminho_temp_index = os.path.join(
+        configuracoes.get_caminho_temp_index(), configuracoes.get_temp_index_usuario()
+    )
+    arquivo_pdf = os.path.join(caminho_temp_index, "0001.PDF")
+
+    if not os.path.exists(arquivo_pdf):
+        logger.error(f"Arquivo TIFF da digitalização não encontrado: {arquivo_pdf}")
+        raise FileNotFoundError(
+            f"Arquivo TIFF da digitalização não encontrado: {arquivo_pdf}"
+        )
+
+    try:
+        # Copiar o arquivo PDF para a pasta de destino
+        shutil.copy2(arquivo_pdf, caminho_destino_pdf)
+        logger.info(f"PDF copiado para: {caminho_destino_pdf}")
+        print(f"PDF copiado para: {caminho_destino_pdf}")
+    except Exception as e:
+        logger.error(f"Erro ao copiar o pdf para o caminho de destino: {str(e)}")
+        raise Exception(f"Erro ao copiar o pdf para o caminho de destino: {e}")
+
+    try:
+        os.remove(arquivo_pdf)
+        logger.info(f"Arquivo PDF removido de {arquivo_pdf}")
+    except Exception as e:
+        logger.error(f"Erro ao remover arquivo PDF temporário: {str(e)}")
+        raise Exception(f"Erro ao remover arquivo PDF temporário: {e}")
+
+
+def processar_digitalizacao(
+    tipo_documento: int,
+    num_documento,
+    caminho_temp,
+    caminho_base,
+    caminho_backup,
+    pasta_usuario,
+    ano_cert=None,
+    num_cert=None,
+    tipo_operacao="novo nocumento",
+):
+
+    tipos_de_documento = [
+        "matricula",
+        "Protocolo",
+        "CERTIDAO",
+        "auxiliar",
+        "CERTIDAO",
+        "Protocolo",
     ]
-    nome_arquivo_temp = '0001.TIF'
+    nome_arquivo_temp = "0001.TIF"
     # Construção do caminho do arquivo original
-    caminho_original = os.path.normpath(os.path.join(caminho_base, tipos_de_documento[tipo_documento]))
+    caminho_original = os.path.normpath(
+        os.path.join(caminho_base, tipos_de_documento[tipo_documento])
+    )
 
     if tipo_documento in [2, 4]:
         if not (ano_cert and num_cert):
-            raise ValueError("Ano da certidão e número da certidão são obrigatórios para este tipo de documento.")
+            raise ValueError(
+                "Ano da certidão e número da certidão são obrigatórios para este tipo de documento."
+            )
 
         subpasta = f"L00020{ano_cert}"
         nome_arquivo = f"{str(num_cert).zfill(6)}.TIF"
     else:
         if not num_documento:
-            raise ValueError("Número do documento é obrigatório para este tipo de documento.")
+            raise ValueError(
+                "Número do documento é obrigatório para este tipo de documento."
+            )
 
         num_documento = str(num_documento).zfill(6)
         subpasta = num_documento[:3]
         nome_arquivo = f"{num_documento[-3:]}.TIF"
 
-    caminho_arquivo_backup = os.path.normpath(os.path.join(caminho_backup,
-        tipos_de_documento[tipo_documento],
-        subpasta,
-        nome_arquivo
-    ))
+    caminho_arquivo_backup = os.path.normpath(
+        os.path.join(
+            caminho_backup, tipos_de_documento[tipo_documento], subpasta, nome_arquivo
+        )
+    )
 
-    caminho_novo = os.path.normpath(os.path.join(caminho_original, subpasta, nome_arquivo))
-    caminho_temp_arquivo = os.path.normpath(os.path.join(caminho_temp, pasta_usuario, nome_arquivo_temp))
+    caminho_novo = os.path.normpath(
+        os.path.join(caminho_original, subpasta, nome_arquivo)
+    )
+    caminho_temp_arquivo = os.path.normpath(
+        os.path.join(caminho_temp, pasta_usuario, nome_arquivo_temp)
+    )
 
     # Verificação de existência dos caminhos, se não existe o caminho original, e for um documento novo
     # levantar exceção de filenot found
@@ -84,7 +144,9 @@ def processar_digitalizacao(tipo_documento: int, num_documento, caminho_temp, ca
 
     if not os.path.exists(caminho_temp_arquivo):
         logger.error(f"Arquivo digitalizado não encontrado: {caminho_temp_arquivo}")
-        raise FileNotFoundError(f"Arquivo digitalizado não encontrado: {caminho_temp_arquivo}")
+        raise FileNotFoundError(
+            f"Arquivo digitalizado não encontrado: {caminho_temp_arquivo}"
+        )
 
     # Criação de diretório para backup, se não existir
     os.makedirs(os.path.dirname(caminho_arquivo_backup), exist_ok=True)
@@ -106,14 +168,19 @@ def processar_digitalizacao(tipo_documento: int, num_documento, caminho_temp, ca
     except Exception as e:
         logger.error(f"Erro ao processar digitalização: {str(e)}")
         raise Exception(f"Erro ao processar digitalização: {e}")
-    
+
     if os.path.exists(caminho_temp_arquivo):
         try:
             # Apaga arquivo digitalizado em temp_index caso não tenha sido movido
             os.remove(caminho_temp_arquivo)
         except Exception as e:
-            logger.error(f"Erro ao remover o arquivo de digitalização temporário! {str(e)}")
-            raise Exception(f"Erro ao remover o arquivo de digitalização temporário! {e}")
+            logger.error(
+                f"Erro ao remover o arquivo de digitalização temporário! {str(e)}"
+            )
+            raise Exception(
+                f"Erro ao remover o arquivo de digitalização temporário! {e}"
+            )
+
 
 if __name__ == "__main__":
     pass
