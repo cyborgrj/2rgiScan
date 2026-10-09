@@ -27,3 +27,12 @@ dist/
 # Cache do Python
 __pycache__/
 *.pyc
+# Dados sensíveis do cartório — não versionar
+email_rgi/credentials.json
+email_rgi/token*.json
+config.ini
+db/old/
+db/*.db
+db/users.sql
+*.xlsx
+__pycache__/
